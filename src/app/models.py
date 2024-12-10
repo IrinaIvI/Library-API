@@ -33,7 +33,7 @@ class Borrow(Base):
     book_id: Mapped[int] = mapped_column(ForeignKey("book.id"), nullable=False)
     reader_name: Mapped[str] = mapped_column(String(10), nullable=False)
     borrow_date: Mapped[Date] = mapped_column(nullable=False)
-    return_date: Mapped[Date] = mapped_column(nullable=False)
+    return_date: Mapped[Date] = mapped_column(nullable=True)
 
     book: Mapped["Book"] = relationship("Book", back_populates="borrows")
 
