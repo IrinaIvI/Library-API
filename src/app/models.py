@@ -1,5 +1,6 @@
-from sqlalchemy import String, Date, Text, ForeignKey,Integer
+from sqlalchemy import String, Text, ForeignKey,Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from datetime import date
 
 class Base(DeclarativeBase):
     pass
@@ -10,7 +11,7 @@ class Author(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(10), nullable=False)
     surname: Mapped[str] = mapped_column(String(10), nullable=False)
-    date_of_birth: Mapped[Date] = mapped_column(nullable=True)
+    date_of_birth: Mapped[date] = mapped_column(nullable=True)
 
     books: Mapped[list["Book"]] = relationship("Book", back_populates="author")
 
@@ -19,7 +20,7 @@ class Book(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(20), nullable=False)
-    description: Mapped[str] = mapped_column(Text(200), nullable=True)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
     author_id: Mapped[int] = mapped_column(ForeignKey("author.id"), nullable=False)
     available_copies: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
@@ -32,8 +33,8 @@ class Borrow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     book_id: Mapped[int] = mapped_column(ForeignKey("book.id"), nullable=False)
     reader_name: Mapped[str] = mapped_column(String(10), nullable=False)
-    borrow_date: Mapped[Date] = mapped_column(nullable=False)
-    return_date: Mapped[Date] = mapped_column(nullable=True)
+    borrow_date: Mapped[date] = mapped_column(nullable=False)
+    return_date: Mapped[date] = mapped_column(nullable=True)
 
     book: Mapped["Book"] = relationship("Book", back_populates="borrows")
 
