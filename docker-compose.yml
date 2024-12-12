@@ -19,6 +19,8 @@ services:
       - postgres
     networks:
       - backend
+    volumes:
+      - ./migrations:/app/migrations
 
 networks:
   backend:
