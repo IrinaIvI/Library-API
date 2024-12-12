@@ -30,7 +30,7 @@ async def create_book(title: str, description: str, author_id: int, available_co
             id=new_book.id, 
             title=new_book.title, 
             description=new_book.description, 
-            author_id=author.id,
+            author_id=new_book.author_id,
             available_copies=new_book.available_copies
         )
     except Exception:
@@ -75,6 +75,7 @@ async def update_book(id: int, title: str, description: str, author_id: int, ava
         current_book.title = title
         current_book.description = description
         current_book.author_id = author_id
+        current_book.available_copies = available_copies
         await db.commit()
         await db.refresh(current_book)
         return BookScheme(

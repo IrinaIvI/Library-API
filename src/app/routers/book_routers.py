@@ -13,7 +13,7 @@ book_router = APIRouter()
 async def api_create_book(title: str, description: str, author_id: int, available_copies: int, db: Annotated[AsyncSession, Depends(get_db)]):
    try:
        book = await create_book(title, description, author_id, available_copies, db)
-       
+
        if not book:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -27,7 +27,7 @@ async def api_create_book(title: str, description: str, author_id: int, availabl
                     "id": book.id,
                     "title": book.title,
                     "desctiption": book.description,
-                    "author": f"{book.author.name} {book.author.surname}",
+                    "author": book.author_id,
                     "available_copies": book.available_copies,
                 }
             }
@@ -71,7 +71,7 @@ async def api_update_book(id: int, title: str, description: str, author_id: int,
                     "id": current_book.id,
                     "title": current_book.title,
                     "desctiption": current_book.description,
-                    "author": f"{current_book.author.name} {current_book.author.surname}",
+                    "author_id": current_book.author_id,
                     "available_copies": current_book.available_copies,
                 }
             }
