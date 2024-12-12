@@ -34,6 +34,9 @@ async def get_all_authors(db: AsyncSession) -> list[AuthorScheme]:
     try: 
         result = await db.execute(select(Author).order_by(asc(Author.id)))
         authors = result.scalars().all()
+        if not authors:
+            return None
+        
         return authors
     except Exception:
         raise
@@ -42,6 +45,9 @@ async def get_author(id: int, db: AsyncSession) -> AuthorScheme:
     try:
         result = await db.execute(select(Author).filter(Author.id == id))
         author = result.scalars().first()
+        if not author:
+            return None
+        
         return AuthorScheme(
             id=author.id, 
             name=author.name, 

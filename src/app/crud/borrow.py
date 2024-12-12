@@ -1,19 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import asc, func, text
-from ..models import Book, Author
+from ..models import Borrow
 from datetime import date
-from ..schemes import BookScheme
+from ..schemes import BorrowScheme
 from sqlalchemy.future import select
 
 
 async def create_book(title: str, description: str, author_id: int, available_copies: int, db: AsyncSession) -> BookScheme:
     try:
-
-        author = await db.execute(select(Author).filter(Author.id == author_id))
-        author = author.scalars().first()
-
-        if not author:
-            return None
 
         result = await db.execute(select(func.count()).select_from(Book))
         count = result.scalar()
@@ -21,7 +15,7 @@ async def create_book(title: str, description: str, author_id: int, available_co
         if count == 0:
             await db.execute(text("SELECT setval(pg_get_serial_sequence('book', 'id'), 1, false);"))
             await db.commit()
-            
+
         new_book = Book(title=title, description=description, author_id=author_id, available_copies=available_copies)
         db.add(new_book)
         await db.commit()
@@ -30,7 +24,7 @@ async def create_book(title: str, description: str, author_id: int, available_co
             id=new_book.id, 
             title=new_book.title, 
             description=new_book.description, 
-            author_id=author.id,
+            author_id=new_book.author_id,
             available_copies=new_book.available_copies
         )
     except Exception:
@@ -41,9 +35,6 @@ async def get_all_books(db: AsyncSession) -> list[BookScheme]:
     try: 
         result = await db.execute(select(Book).order_by(asc(Book.id)))
         books = result.scalars().all()
-        if not books:
-            return None
-        
         return books
     except Exception:
         raise
@@ -52,8 +43,6 @@ async def get_book(id: int, db: AsyncSession) -> BookScheme:
     try:
         result = await db.execute(select(Book).filter(Book.id == id))
         book = result.scalars().first()
-        if not book:
-            return None
         return BookScheme(
             id=book.id, 
             title=book.title, 

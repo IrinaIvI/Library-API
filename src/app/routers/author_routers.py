@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from .database import get_db
-from .crud.author import get_all_authors, get_author, update_author, delete_author, create_author
+from ..database import get_db
+from ..crud.author import get_all_authors, get_author, update_author, delete_author, create_author
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
-from .schemes import AuthorScheme
+from ..schemes import AuthorScheme
 from datetime import date
 
-router = APIRouter(prefix='/api_library')
+author_router = APIRouter()
 
-@router.post("/authors", response_model=AuthorScheme)
+@author_router.post("/", response_model=AuthorScheme)
 async def api_create_author(name: str, surname: str, date_of_birth: date, db: Annotated[AsyncSession, Depends(get_db)]):
    try:
        author = await create_author(name, surname, date_of_birth, db)
@@ -28,7 +28,7 @@ async def api_create_author(name: str, surname: str, date_of_birth: date, db: An
    except Exception as e:
        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
 
-@router.get("/authors", response_model=list[AuthorScheme])
+@author_router.get("/", response_model=list[AuthorScheme])
 async def api_get_all_authors(db: Annotated[AsyncSession, Depends(get_db)]):
     try: 
         authors = await get_all_authors(db)
@@ -38,7 +38,7 @@ async def api_get_all_authors(db: Annotated[AsyncSession, Depends(get_db)]):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
-@router.get("/authors/{id}")
+@author_router.get("/{id}")
 async def api_get_author(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
         author = await get_author(id, db)
@@ -48,7 +48,7 @@ async def api_get_author(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
-@router.put("/authors/{id}", response_model=AuthorScheme)
+@author_router.put("/{id}", response_model=AuthorScheme)
 async def api_update_author(id: int, name: str, surname: str, date_of_birth: date, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
         current_author = await update_author(id, name, surname, date_of_birth, db)
@@ -71,7 +71,7 @@ async def api_update_author(id: int, name: str, surname: str, date_of_birth: dat
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
-@router.delete("/authors/{id}")
+@author_router.delete("/{id}")
 async def api_delete_author(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
         deleted_author = await delete_author(id, db)
