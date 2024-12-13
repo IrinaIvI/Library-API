@@ -37,4 +37,3 @@ class Borrow(Base):
     return_date: Mapped[date] = mapped_column(nullable=True)
 
     book: Mapped["Book"] = relationship("Book", back_populates="borrows")
-

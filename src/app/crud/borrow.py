@@ -76,20 +76,24 @@ async def get_borrow(id: int, db: AsyncSession) -> BorrowScheme:
     except Exception:
         raise
 
-async def finished_borrow(id: int, return_date: date, db: AsyncSession) -> BorrowScheme:
+async def finished_borrow(id: int, return_date: date, db: AsyncSession) -> bool:
     try:
-        result = await db.execute(select(Borrow).filter(Borrow.id == id))
-        borrow = result.scalars().first()
+        current_borrow = await get_borrow(id=id, db=db)
+
+        if not current_borrow:
+            return False
         
-        if not borrow:
-            return None
+        current_borrow.return_date = return_date
+        await db.commit()
+        await db.refresh(current_borrow)
         
-        # current_borrow.return_date = return_date
-        # logging.info("book_id", current_borrow.book.id)
-        # current_borrow.book.available_copies += 1
-        
-        # await db.commit()
-        # await db.refresh(current_borrow)
+        book = await db.execute(select(Book).filter(Book.id == current_borrow.book_id))
+        book = book.scalars().first()
+        book.available_copies += 1
+        await db.commit()
+        await db.refresh(book)
+
+        return True
 
         # return BorrowScheme(
         #     id=current_borrow.id, 
@@ -98,6 +102,7 @@ async def finished_borrow(id: int, return_date: date, db: AsyncSession) -> Borro
         #     borrow_date=current_borrow.borrow_date, 
         #     return_date=current_borrow.return_date,
         # )
+        # return "Книга сдана"
 
     except Exception:
         await db.rollback()

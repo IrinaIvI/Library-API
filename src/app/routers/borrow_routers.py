@@ -5,6 +5,8 @@ from ..crud.borrow import get_all_borrows, get_borrow, finished_borrow, create_b
 from typing import Annotated, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemes import BorrowScheme
+from ..models import Borrow, Book
+from sqlalchemy.future import select
 from datetime import date
 
 borrow_router = APIRouter()
@@ -50,7 +52,7 @@ async def api_get_all_borrows(db: Annotated[AsyncSession, Depends(get_db)]):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
-@borrow_router.get("/{id}")
+@borrow_router.get("/{id}", response_model=BorrowScheme)
 async def api_get_borrow(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
         borrow = await get_borrow(id=id, db=db)
@@ -61,23 +63,27 @@ async def api_get_borrow(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
 @borrow_router.patch("/{id}/return")
-async def api_finished_borrow(id: int, return_date: date, db: Annotated[AsyncSession, Depends(get_db)]):
+async def api_finished_borrow(id: int, return_date: date, db: AsyncSession):
     try:
-        borrow = await finished_borrow(id=id, return_date=return_date, db=db)
-        if not borrow:
+        result = await finished_borrow(id=id, db=db)
+        current_borrow = result.scalars().first()
+
+        if not current_borrow:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись о выдаче книги по указанному айди не найдена")
+
         return JSONResponse(
-            status_code=status.HTTP_202_ACCEPTED,
+            status_code=status.HTTP_201_CREATED,
             content={
-                "message": "Запись о выдаче книг успешно обновлена!",
-                "borrow": {
-                    "id": borrow.id,
-                    "reader_name": borrow.reader_name,
-                    "borrow_date": borrow.borrow_date,
-                    "return_date": borrow.return_date
-                }
+                "message": "Новая запись о выдаче успешно создана!"
+                # "borrow": {
+                #     "id": current_borrow.id,
+                #     "reader_name": current_borrow.reader_name,
+                #     "borrow_date": current_borrow.borrow_date,
+                #     "return_date": current_borrow.return_date
+                # }
             }
         )
+
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
