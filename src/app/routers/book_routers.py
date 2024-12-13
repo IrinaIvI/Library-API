@@ -12,7 +12,7 @@ book_router = APIRouter()
 @book_router.post("/", response_model=BookScheme)
 async def api_create_book(title: str, description: str, author_id: int, available_copies: int, db: Annotated[AsyncSession, Depends(get_db)]):
    try:
-       book = await create_book(title, description, author_id, available_copies, db)
+       book = await create_book(title=title, description=description, author_id=author_id, available_copies=available_copies, db=db)
 
        if not book:
             raise HTTPException(
@@ -58,7 +58,7 @@ async def api_get_book(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
 @book_router.put("/{id}", response_model=BookScheme)
 async def api_update_book(id: int, title: str, description: str, author_id: int, available_copies: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
-        current_book = await update_book(id, title, description, author_id, available_copies, db)
+        current_book = await update_book(id=id, title=title, description=description, author_id=author_id, available_copies=available_copies, db=db)
 
         if not current_book:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Книга по указанному айди не найдена")
@@ -82,7 +82,7 @@ async def api_update_book(id: int, title: str, description: str, author_id: int,
 @book_router.delete("/{id}")
 async def api_delete_book(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
-        deleted_book = await delete_book(id, db)
+        deleted_book = await delete_book(id=id, db=db)
         if not deleted_book:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Книга по указанному айди не найдена")
         return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content="Книга успешно удалена")

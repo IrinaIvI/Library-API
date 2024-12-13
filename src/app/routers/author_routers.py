@@ -12,7 +12,7 @@ author_router = APIRouter()
 @author_router.post("/", response_model=AuthorScheme)
 async def api_create_author(name: str, surname: str, date_of_birth: date, db: Annotated[AsyncSession, Depends(get_db)]):
    try:
-       author = await create_author(name, surname, date_of_birth, db)
+       author = await create_author(name=name, surname=surname, date_of_birth=date_of_birth, db=db)
        return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content={
@@ -41,7 +41,7 @@ async def api_get_all_authors(db: Annotated[AsyncSession, Depends(get_db)]):
 @author_router.get("/{id}")
 async def api_get_author(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
-        author = await get_author(id, db)
+        author = await get_author(id=id, db=db)
         if not author:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Автор по указанному айди не найден")
         return author
@@ -74,7 +74,7 @@ async def api_update_author(id: int, name: str, surname: str, date_of_birth: dat
 @author_router.delete("/{id}")
 async def api_delete_author(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
-        deleted_author = await delete_author(id, db)
+        deleted_author = await delete_author(id=id, db=db)
         if not deleted_author:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Автор по указанному айди не найден")
         return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content="Автор успешно удален")

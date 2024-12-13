@@ -12,7 +12,7 @@ borrow_router = APIRouter()
 @borrow_router.post("/", response_model=BorrowScheme)
 async def api_create_borrow(book_id: int, reader_name: str, borrow_date: date, db: Annotated[AsyncSession, Depends(get_db)], return_date: Optional[date] = None):
    try:
-       borrow = await create_borrow(book_id, reader_name, borrow_date, return_date, db)
+       borrow = await create_borrow(book_id=book_id, reader_name=reader_name, borrow_date=borrow_date, return_date=return_date, db=db)
 
        if borrow is None:
             raise HTTPException(
@@ -28,7 +28,7 @@ async def api_create_borrow(book_id: int, reader_name: str, borrow_date: date, d
        return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content={
-                "message": "Новая запись о выдаче успешно создрана!",
+                "message": "Новая запись о выдаче успешно создана!",
                 "borrow": {
                     "id": borrow.id,
                     "title": borrow.title,
@@ -42,7 +42,7 @@ async def api_create_borrow(book_id: int, reader_name: str, borrow_date: date, d
        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
 
 @borrow_router.get("/", response_model=list[BorrowScheme])
-async def api_get_all_books(db: Annotated[AsyncSession, Depends(get_db)]):
+async def api_get_all_borrows(db: Annotated[AsyncSession, Depends(get_db)]):
     try: 
         borrows = await get_all_borrows(db)
         if not borrows:
@@ -54,7 +54,7 @@ async def api_get_all_books(db: Annotated[AsyncSession, Depends(get_db)]):
 @borrow_router.get("/{id}")
 async def api_get_borrow(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
-        borrow = await get_borrow(id, db)
+        borrow = await get_borrow(id=id, db=db)
         if not borrow:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись о выдаче по указанному айди не найдена")
         return borrow

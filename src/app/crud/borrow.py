@@ -5,12 +5,16 @@ from ..models import Borrow, Book
 from datetime import date
 from ..schemes import BorrowScheme
 from sqlalchemy.future import select
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 async def create_borrow(book_id: int, reader_name: str, borrow_date: date, db: AsyncSession, return_date: Optional[date] = None) -> Optional[BorrowScheme]:
     try:
         book = await db.execute(select(Book).filter(Book.id == book_id))
         book = book.scalars().first()
+        logging.info("Данные о книге", book)
 
         if not book:
             return None
@@ -20,7 +24,7 @@ async def create_borrow(book_id: int, reader_name: str, borrow_date: date, db: A
         
         book.available_copies -= 1
         
-        await db.commit(book)
+        await db.commit()
         await db.refresh(book)
 
         result = await db.execute(select(func.count()).select_from(Borrow))
