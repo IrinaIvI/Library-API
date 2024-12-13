@@ -79,23 +79,25 @@ async def get_borrow(id: int, db: AsyncSession) -> BorrowScheme:
 async def finished_borrow(id: int, return_date: date, db: AsyncSession) -> BorrowScheme:
     try:
         result = await db.execute(select(Borrow).filter(Borrow.id == id))
-        current_borrow = result.scalars().first()
-
-        if not current_borrow:
+        borrow = result.scalars().first()
+        
+        if not borrow:
             return None
         
-        current_borrow.return_date = return_date
-        current_borrow.book.available_copies += 1
+        # current_borrow.return_date = return_date
+        # logging.info("book_id", current_borrow.book.id)
+        # current_borrow.book.available_copies += 1
         
-        await db.commit()
-        await db.refresh(current_borrow)
-        return BorrowScheme(
-            id=current_borrow.id, 
-            book_id=current_borrow.book_id,
-            reader_name=current_borrow.reader_name, 
-            borrow_date=current_borrow.borrow_date, 
-            return_date=current_borrow.return_date,
-        )
+        # await db.commit()
+        # await db.refresh(current_borrow)
+
+        # return BorrowScheme(
+        #     id=current_borrow.id, 
+        #     book_id=current_borrow.book_id,
+        #     reader_name=current_borrow.reader_name, 
+        #     borrow_date=current_borrow.borrow_date, 
+        #     return_date=current_borrow.return_date,
+        # )
 
     except Exception:
         await db.rollback()

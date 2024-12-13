@@ -31,10 +31,9 @@ async def api_create_borrow(book_id: int, reader_name: str, borrow_date: date, d
                 "message": "Новая запись о выдаче успешно создана!",
                 "borrow": {
                     "id": borrow.id,
-                    "title": borrow.title,
-                    "desctiption": borrow.description,
-                    "author": borrow.author_id,
-                    "available_copies": borrow.available_copies,
+                    "reader_name": borrow.reader_name,
+                    "borrow_date": borrow.borrow_date,
+                    "return_date": borrow.return_date
                 }
             }
         )
@@ -67,7 +66,18 @@ async def api_finished_borrow(id: int, return_date: date, db: Annotated[AsyncSes
         borrow = await finished_borrow(id=id, return_date=return_date, db=db)
         if not borrow:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись о выдаче книги по указанному айди не найдена")
-        return borrow
+        return JSONResponse(
+            status_code=status.HTTP_202_ACCEPTED,
+            content={
+                "message": "Запись о выдаче книг успешно обновлена!",
+                "borrow": {
+                    "id": borrow.id,
+                    "reader_name": borrow.reader_name,
+                    "borrow_date": borrow.borrow_date,
+                    "return_date": borrow.return_date
+                }
+            }
+        )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
