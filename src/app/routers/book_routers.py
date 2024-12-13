@@ -17,7 +17,7 @@ async def api_create_book(title: str, description: str, author_id: int, availabl
        if not book:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Автор с id {author_id} не найден."
+                detail=f"Автор с указанным айди {author_id} не найден."
             )
        return JSONResponse(
             status_code=status.HTTP_201_CREATED,

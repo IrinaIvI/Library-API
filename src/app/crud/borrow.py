@@ -1,13 +1,27 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import asc, func, text
-from ..models import Borrow
+from typing import Optional
+from ..models import Borrow, Book
 from datetime import date
 from ..schemes import BorrowScheme
 from sqlalchemy.future import select
 
 
-async def create_borrow(book_id: int, reader_name: str, borrow_date: date, return_date: int, db: AsyncSession) -> BorrowScheme:
+async def create_borrow(book_id: int, reader_name: str, borrow_date: date, db: AsyncSession, return_date: Optional[date] = None) -> Optional[BorrowScheme]:
     try:
+        book = await db.execute(select(Book).filter(Book.id == book_id))
+        book = book.scalars().first()
+
+        if not book:
+            return None
+        
+        if book.available_copies == 0:
+            return False
+        
+        book.available_copies -= 1
+        
+        await db.commit(book)
+        await db.refresh(book)
 
         result = await db.execute(select(func.count()).select_from(Borrow))
         count = result.scalar()
@@ -57,22 +71,20 @@ async def get_borrow(id: int, db: AsyncSession) -> BorrowScheme:
         )
     except Exception:
         raise
-    
-async def update_borrow(id: int, book_id: int, reader_name: str, borrow_date: date, return_date: int, db: AsyncSession) -> BorrowScheme:
+
+async def finished_borrow(id: int, return_date: date, db: AsyncSession) -> BorrowScheme:
     try:
         result = await db.execute(select(Borrow).filter(Borrow.id == id))
         current_borrow = result.scalars().first()
 
         if not current_borrow:
             return None
-
-        current_borrow.book_id = book_id
-        current_borrow.reader_name = reader_name
-        current_borrow.borrow_date = borrow_date
+        
         current_borrow.return_date = return_date
+        current_borrow.book.available_copies += 1
+        
         await db.commit()
         await db.refresh(current_borrow)
-
         return BorrowScheme(
             id=current_borrow.id, 
             book_id=current_borrow.book_id,
@@ -80,21 +92,7 @@ async def update_borrow(id: int, book_id: int, reader_name: str, borrow_date: da
             borrow_date=current_borrow.borrow_date, 
             return_date=current_borrow.return_date,
         )
-    
-    except Exception:
-        await db.rollback()
-        raise
 
-async def delete_borrow(id: int, db: AsyncSession) -> bool:
-    try:
-        result = await db.execute(select(Borrow).filter(Borrow.id == id))
-        current_borrow = result.scalars().first()
-        if not current_borrow:
-            return False
-        
-        await db.delete(current_borrow)
-        await db.commit()
-        return True
     except Exception:
         await db.rollback()
         raise
