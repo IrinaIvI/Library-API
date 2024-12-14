@@ -10,29 +10,42 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-async def create_borrow(book_id: int, reader_name: str, borrow_date: date, db: AsyncSession, return_date: Optional[date] = None) -> BorrowScheme:
+async def create_borrow(
+    book_id: int,
+    reader_name: str,
+    borrow_date: date,
+    db: AsyncSession,
+    return_date: Optional[date] = None,
+) -> BorrowScheme:
     try:
         book = await db.execute(select(Book).filter(Book.id == book_id))
         book = book.scalars().first()
 
         if not book:
             return None
-        
+
         if book.available_copies == 0:
             return False
-        
+
         if return_date and return_date < borrow_date:
             return "Invalid return_date"
-        
+
         book.available_copies -= 1
 
         result = await db.execute(select(func.count()).select_from(Borrow))
         count = result.scalar()
 
         if count == 0:
-            await db.execute(text("SELECT setval(pg_get_serial_sequence('borrow', 'id'), 1, false);"))
+            await db.execute(
+                text("SELECT setval(pg_get_serial_sequence('borrow', 'id'), 1, false);")
+            )
 
-        new_borrow = Borrow(book_id=book_id, reader_name=reader_name, borrow_date=borrow_date, return_date=return_date)
+        new_borrow = Borrow(
+            book_id=book_id,
+            reader_name=reader_name,
+            borrow_date=borrow_date,
+            return_date=return_date,
+        )
         db.add(new_borrow)
         await db.commit()
         await db.refresh(book)
@@ -49,9 +62,10 @@ async def create_borrow(book_id: int, reader_name: str, borrow_date: date, db: A
     except Exception:
         await db.rollback()
         raise
-    
+
+
 async def get_all_borrows(db: AsyncSession) -> list[BorrowScheme]:
-    try: 
+    try:
         result = await db.execute(select(Borrow).order_by(asc(Borrow.id)))
         borrows = result.scalars().all()
         if not borrows:
@@ -60,13 +74,14 @@ async def get_all_borrows(db: AsyncSession) -> list[BorrowScheme]:
     except Exception:
         raise
 
+
 async def get_borrow(id: int, db: AsyncSession) -> BorrowScheme:
     try:
         result = await db.execute(select(Borrow).filter(Borrow.id == id))
         borrow = result.scalars().first()
         if not borrow:
             return None
-        
+
         return BorrowScheme(
             id=borrow.id,
             book_id=borrow.book_id,
@@ -79,7 +94,9 @@ async def get_borrow(id: int, db: AsyncSession) -> BorrowScheme:
         raise
 
 
-async def finished_borrow(id: int, return_date: date,  db: AsyncSession) -> BorrowUpdateScheme:
+async def finished_borrow(
+    id: int, return_date: date, db: AsyncSession
+) -> BorrowUpdateScheme:
     try:
         result = await db.execute(select(Borrow).filter(Borrow.id == id))
         borrow = result.scalars().first()
@@ -89,7 +106,7 @@ async def finished_borrow(id: int, return_date: date,  db: AsyncSession) -> Borr
             return False
         if return_date < borrow.borrow_date:
             return "Invalid return_date"
-        
+
         borrow.return_date = return_date
         borrow.is_return = True
 
@@ -108,4 +125,3 @@ async def finished_borrow(id: int, return_date: date,  db: AsyncSession) -> Borr
     except Exception:
         await db.rollback()
         raise
-

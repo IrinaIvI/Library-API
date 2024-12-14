@@ -5,6 +5,7 @@ from app.config import DATABASE_URL
 engine = create_async_engine(url=DATABASE_URL, echo=True)
 async_session = async_sessionmaker(bind=engine, class_=AsyncSession)
 
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session

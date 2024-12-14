@@ -5,7 +5,13 @@ from ..schemes import BookScheme
 from sqlalchemy.future import select
 
 
-async def create_book(title: str, description: str, author_id: int, available_copies: int, db: AsyncSession) -> BookScheme:
+async def create_book(
+    title: str,
+    description: str,
+    author_id: int,
+    available_copies: int,
+    db: AsyncSession,
+) -> BookScheme:
     try:
 
         author = await db.execute(select(Author).filter(Author.id == author_id))
@@ -18,10 +24,16 @@ async def create_book(title: str, description: str, author_id: int, available_co
         count = result.scalar()
 
         if count == 0:
-            await db.execute(text("SELECT setval(pg_get_serial_sequence('book', 'id'), 1, false);"))
-            await db.commit()
-            
-        new_book = Book(title=title, description=description, author_id=author_id, available_copies=available_copies)
+            await db.execute(
+                text("SELECT setval(pg_get_serial_sequence('book', 'id'), 1, false);")
+            )
+
+        new_book = Book(
+            title=title,
+            description=description,
+            author_id=author_id,
+            available_copies=available_copies,
+        )
         db.add(new_book)
         await db.commit()
         await db.refresh(new_book)
@@ -36,17 +48,19 @@ async def create_book(title: str, description: str, author_id: int, available_co
     except Exception:
         await db.rollback()
         raise
-    
+
+
 async def get_all_books(db: AsyncSession) -> list[BookScheme]:
-    try: 
+    try:
         result = await db.execute(select(Book).order_by(asc(Book.id)))
         books = result.scalars().all()
         if not books:
             return None
-        
+
         return books
     except Exception:
         raise
+
 
 async def get_book(id: int, db: AsyncSession) -> Book:
     try:
@@ -55,16 +69,24 @@ async def get_book(id: int, db: AsyncSession) -> Book:
         if not book:
             return None
         return BookScheme(
-            id=book.id, 
-            title=book.title, 
-            description=book.description, 
+            id=book.id,
+            title=book.title,
+            description=book.description,
             author_id=book.author_id,
-            available_copies=book.available_copies
+            available_copies=book.available_copies,
         )
     except Exception:
         raise
-    
-async def update_book(id: int, title: str, description: str, author_id: int, available_copies: int, db: AsyncSession) -> BookScheme:
+
+
+async def update_book(
+    id: int,
+    title: str,
+    description: str,
+    author_id: int,
+    available_copies: int,
+    db: AsyncSession,
+) -> BookScheme:
     try:
         result = await db.execute(select(Book).filter(Book.id == id))
         current_book = result.scalars().first()
@@ -80,16 +102,17 @@ async def update_book(id: int, title: str, description: str, author_id: int, ava
         await db.refresh(current_book)
 
         return BookScheme(
-            id=current_book.id, 
-            title=current_book.title, 
-            description=current_book.description, 
+            id=current_book.id,
+            title=current_book.title,
+            description=current_book.description,
             author_id=current_book.author_id,
-            available_copies=current_book.available_copies
+            available_copies=current_book.available_copies,
         )
-    
+
     except Exception:
         await db.rollback()
         raise
+
 
 async def delete_book(id: int, db: AsyncSession) -> bool:
     try:
@@ -98,10 +121,10 @@ async def delete_book(id: int, db: AsyncSession) -> bool:
         if not current_book:
             return False
         
+
         await db.delete(current_book)
         await db.commit()
         return True
     except Exception:
         await db.rollback()
         raise
-

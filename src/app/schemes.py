@@ -1,11 +1,14 @@
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional
+
+
 class AuthorScheme(BaseModel):
     id: int
     name: str
     surname: str
     date_of_birth: Optional[date]
+
 
 class BookScheme(BaseModel):
     id: int
@@ -13,6 +16,7 @@ class BookScheme(BaseModel):
     description: Optional[str]
     author_id: int
     available_copies: int
+
 
 class BorrowScheme(BaseModel):
     id: int
