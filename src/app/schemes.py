@@ -20,3 +20,8 @@ class BorrowScheme(BaseModel):
     reader_name: str
     borrow_date: date
     return_date: Optional[date]
+
+
+class BorrowUpdateScheme(BaseModel):
+    id: int
+    return_date: date

@@ -15,16 +15,9 @@ async def api_create_author(name: str, surname: str, date_of_birth: date, db: An
        author = await create_author(name=name, surname=surname, date_of_birth=date_of_birth, db=db)
        return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={
-                "message": "Новый автор успешно создан!",
-                "author": {
-                    "id": author.id,
-                    "name": author.name,
-                    "surname": author.surname,
-                    "date_of_birth": str(author.date_of_birth)
-                }
-            }
+            content=author,
         )
+   
    except Exception as e:
        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
 
@@ -38,13 +31,18 @@ async def api_get_all_authors(db: Annotated[AsyncSession, Depends(get_db)]):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
-@author_router.get("/{id}")
+@author_router.get("/{id}", response_model=AuthorScheme)
 async def api_get_author(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
         author = await get_author(id=id, db=db)
         if not author:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Автор по указанному айди не найден")
-        return author
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=author,
+        )
+        # return author
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
@@ -58,15 +56,7 @@ async def api_update_author(id: int, name: str, surname: str, date_of_birth: dat
         
         return JSONResponse(
             status_code=status.HTTP_202_ACCEPTED,
-            content={
-                "message": "Информация об авторе обновлена",
-                "author": {
-                    "id": current_author.id,
-                    "name": current_author.name,
-                    "surname": current_author.surname,
-                    "date_of_birth": str(current_author.date_of_birth)
-                }
-            }
+            content=current_author,
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")

@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import asc, func, text
 from ..models import Book, Author
-from datetime import date
 from ..schemes import BookScheme
 from sqlalchemy.future import select
 
@@ -26,13 +25,15 @@ async def create_book(title: str, description: str, author_id: int, available_co
         db.add(new_book)
         await db.commit()
         await db.refresh(new_book)
+
         return BookScheme(
-            id=new_book.id, 
-            title=new_book.title, 
-            description=new_book.description, 
+            id=new_book.id,
+            title=new_book.title,
+            description=new_book.description,
             author_id=new_book.author_id,
-            available_copies=new_book.available_copies
+            available_copies=new_book.available_copies,
         )
+        # return new_book
     except Exception:
         await db.rollback()
         raise
@@ -48,7 +49,7 @@ async def get_all_books(db: AsyncSession) -> list[BookScheme]:
     except Exception:
         raise
 
-async def get_book(id: int, db: AsyncSession) -> BookScheme:
+async def get_book(id: int, db: AsyncSession) -> Book:
     try:
         result = await db.execute(select(Book).filter(Book.id == id))
         book = result.scalars().first()
@@ -78,6 +79,7 @@ async def update_book(id: int, title: str, description: str, author_id: int, ava
         current_book.available_copies = available_copies
         await db.commit()
         await db.refresh(current_book)
+
         return BookScheme(
             id=current_book.id, 
             title=current_book.title, 
@@ -85,6 +87,7 @@ async def update_book(id: int, title: str, description: str, author_id: int, ava
             author_id=current_book.author_id,
             available_copies=current_book.available_copies
         )
+        # return current_book
     
     except Exception:
         await db.rollback()

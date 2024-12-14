@@ -5,7 +5,6 @@ from ..crud.book import get_all_books, get_book, create_book, delete_book, updat
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..schemes import BookScheme
-from datetime import date
 
 book_router = APIRouter()
 
@@ -21,16 +20,7 @@ async def api_create_book(title: str, description: str, author_id: int, availabl
             )
        return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={
-                "message": "Новая книга успешно создрана!",
-                "book": {
-                    "id": book.id,
-                    "title": book.title,
-                    "desctiption": book.description,
-                    "author": book.author_id,
-                    "available_copies": book.available_copies,
-                }
-            }
+            content=book
         )
    except Exception as e:
        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
@@ -45,7 +35,7 @@ async def api_get_all_books(db: Annotated[AsyncSession, Depends(get_db)]):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
-@book_router.get("/{id}")
+@book_router.get("/{id}", response_model=BookScheme)
 async def api_get_book(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
         book = await get_book(id, db)
@@ -65,16 +55,7 @@ async def api_update_book(id: int, title: str, description: str, author_id: int,
         
         return JSONResponse(
             status_code=status.HTTP_202_ACCEPTED,
-            content={
-                "message": "Информация о книге обновлена!",
-                "book": {
-                    "id": current_book.id,
-                    "title": current_book.title,
-                    "desctiption": current_book.description,
-                    "author_id": current_book.author_id,
-                    "available_copies": current_book.available_copies,
-                }
-            }
+            content=current_book,
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")

@@ -35,5 +35,6 @@ class Borrow(Base):
     reader_name: Mapped[str] = mapped_column(String(20), nullable=False)
     borrow_date: Mapped[date] = mapped_column(nullable=False)
     return_date: Mapped[date] = mapped_column(nullable=True)
+    is_return: Mapped[bool] = mapped_column(default=False)
 
     book: Mapped["Book"] = relationship("Book", back_populates="borrows")

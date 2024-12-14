@@ -20,12 +20,14 @@ async def create_author(name: str, surname: str, date_of_birth: date, db: AsyncS
         db.add(new_author)
         await db.commit()
         await db.refresh(new_author)
+
         return AuthorScheme(
-            id=new_author.id, 
-            name=new_author.name, 
-            surname=new_author.surname, 
-            date_of_birth=new_author.date_of_birth
+            id=new_author.id,
+            name=new_author.name,
+            surname=new_author.surname,
+            date_of_birth=new_author.date_of_birth,
         )
+        # return new_author
     except Exception:
         await db.rollback()
         raise
@@ -49,15 +51,17 @@ async def get_author(id: int, db: AsyncSession) -> AuthorScheme:
             return None
         
         return AuthorScheme(
-            id=author.id, 
-            name=author.name, 
-            surname=author.surname, 
-            date_of_birth=author.date_of_birth
+            id=author.id,
+            name=author.name,
+            surname=author.surname,
+            date_of_birth=author.date_of_birth,
         )
+        
+        # return author
     except Exception:
         raise
     
-async def update_author(id: int, name: str, surname: str, date_of_birth: date, db: AsyncSession) -> AuthorScheme:
+async def update_author(id: int, name: str, surname: str, date_of_birth: date, db: AsyncSession) -> Author:
     try:
         result = await db.execute(select(Author).filter(Author.id == id))
         current_author = result.scalars().first()
@@ -70,7 +74,14 @@ async def update_author(id: int, name: str, surname: str, date_of_birth: date, d
         current_author.date_of_birth = date_of_birth
         await db.commit()
         await db.refresh(current_author)
-        return AuthorScheme(id=current_author.id, name=current_author.name, surname=current_author.surname, date_of_birth=current_author.date_of_birth)
+
+        return AuthorScheme(
+            id=current_author.id,
+            name=current_author.name,
+            surname=current_author.surname,
+            date_of_birth=current_author.date_of_birth,
+        )
+        # return current_author
     
     except Exception:
         await db.rollback()

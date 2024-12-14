@@ -3,10 +3,9 @@ from fastapi.responses import JSONResponse
 from ..database import get_db
 from ..crud.borrow import get_all_borrows, get_borrow, finished_borrow, create_borrow
 from typing import Annotated, Optional
+from ..models import Borrow
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..schemes import BorrowScheme
-from ..models import Borrow, Book
-from sqlalchemy.future import select
+from ..schemes import BorrowScheme, BorrowUpdateScheme
 from datetime import date
 
 borrow_router = APIRouter()
@@ -29,15 +28,7 @@ async def api_create_borrow(book_id: int, reader_name: str, borrow_date: date, d
        
        return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={
-                "message": "Новая запись о выдаче успешно создана!",
-                "borrow": {
-                    "id": borrow.id,
-                    "reader_name": borrow.reader_name,
-                    "borrow_date": borrow.borrow_date,
-                    "return_date": borrow.return_date
-                }
-            }
+            content=borrow,
         )
    except Exception as e:
        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
@@ -58,32 +49,27 @@ async def api_get_borrow(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
         borrow = await get_borrow(id=id, db=db)
         if not borrow:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись о выдаче по указанному айди не найдена")
-        return borrow
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=borrow,
+        )
+        # return borrow
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
-@borrow_router.patch("/{id}/return")
-async def api_finished_borrow(id: int, return_date: date, db: AsyncSession):
+@borrow_router.patch("/{id}/response", response_model=BorrowUpdateScheme)
+async def api_finished_borrow(id: int, return_date: date, db: Annotated[AsyncSession, Depends(get_db)]):
     try:
-        result = await finished_borrow(id=id, db=db)
-        current_borrow = result.scalars().first()
-
-        if not current_borrow:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись о выдаче книги по указанному айди не найдена")
-
+        borrow = await finished_borrow(id=id, return_date=return_date, db=db)
+        if not borrow:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Запись о выдаче по указанному айди не найдена")
+        
         return JSONResponse(
-            status_code=status.HTTP_201_CREATED,
-            content={
-                "message": "Новая запись о выдаче успешно создана!"
-                # "borrow": {
-                #     "id": current_borrow.id,
-                #     "reader_name": current_borrow.reader_name,
-                #     "borrow_date": current_borrow.borrow_date,
-                #     "return_date": current_borrow.return_date
-                # }
-            }
+            status_code=status.HTTP_202_ACCEPTED,
+            content=borrow,
         )
-
+    
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Ошибка сервера: {e}")
     
