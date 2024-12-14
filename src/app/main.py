@@ -13,6 +13,13 @@ async def http_exception_handler(request, exc: HTTPException):
         content={"detail": exc.detail}
     )
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Внутренняя ошибка сервера"}
+    )
+
 app.include_router(author_router, prefix="/api_library/authors", tags=["authors"])
 app.include_router(book_router, prefix="/api_library/books", tags=["books"])
 app.include_router(borrow_router, prefix="/api_library/borrows", tags=["borrows"])

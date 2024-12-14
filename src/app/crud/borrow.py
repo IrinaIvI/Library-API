@@ -21,30 +21,33 @@ async def create_borrow(book_id: int, reader_name: str, borrow_date: date, db: A
         if book.available_copies == 0:
             return False
         
-        book.available_copies -= 1
+        if return_date and return_date < borrow_date:
+            return "Invalid return_date"
         
-        await db.commit()
-        await db.refresh(book)
+        book.available_copies -= 1
+
+        
 
         result = await db.execute(select(func.count()).select_from(Borrow))
         count = result.scalar()
 
         if count == 0:
             await db.execute(text("SELECT setval(pg_get_serial_sequence('borrow', 'id'), 1, false);"))
-            await db.commit()
 
         new_borrow = Borrow(book_id=book_id, reader_name=reader_name, borrow_date=borrow_date, return_date=return_date)
         db.add(new_borrow)
         await db.commit()
+        await db.refresh(book)
         await db.refresh(new_borrow)
 
         return BorrowScheme(
             id=new_borrow.id,
+            book_id=new_borrow.book_id,
             reader_name=new_borrow.reader_name,
             borrow_date=new_borrow.borrow_date,
             return_date=new_borrow.return_date,
+            is_return=new_borrow.is_return,
         )
-        # return new_borrow
     except Exception:
         await db.rollback()
         raise
@@ -68,11 +71,12 @@ async def get_borrow(id: int, db: AsyncSession) -> BorrowScheme:
         
         return BorrowScheme(
             id=borrow.id,
+            book_id=borrow.book_id,
             reader_name=borrow.reader_name,
             borrow_date=borrow.borrow_date,
             return_date=borrow.return_date,
+            is_return=borrow.is_return,
         )
-        # return borrow
     except Exception:
         raise
 
@@ -83,7 +87,13 @@ async def finished_borrow(id: int, return_date: date,  db: AsyncSession) -> Borr
         borrow = result.scalars().first()
         if not borrow:
             return None
+        if borrow.is_return:
+            return False
+        if return_date < borrow.borrow_date:
+            return "Invalid return_date"
+        
         borrow.return_date = return_date
+        borrow.is_return = True
 
         book = await db.execute(select(Book).filter(Book.id == borrow.book_id))
         book = book.scalars().first()
@@ -97,7 +107,6 @@ async def finished_borrow(id: int, return_date: date,  db: AsyncSession) -> Borr
             id=borrow.id,
             return_date=borrow.return_date,
         )
-        # return borrow
     except Exception:
         await db.rollback()
         raise

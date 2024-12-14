@@ -20,6 +20,7 @@ class BorrowScheme(BaseModel):
     reader_name: str
     borrow_date: date
     return_date: Optional[date]
+    is_return: bool
 
 
 class BorrowUpdateScheme(BaseModel):
