@@ -51,14 +51,7 @@ async def create_borrow(
         await db.refresh(book)
         await db.refresh(new_borrow)
 
-        return BorrowScheme(
-            id=new_borrow.id,
-            book_id=new_borrow.book_id,
-            reader_name=new_borrow.reader_name,
-            borrow_date=new_borrow.borrow_date,
-            return_date=new_borrow.return_date,
-            is_return=new_borrow.is_return,
-        )
+        return new_borrow
     except Exception:
         await db.rollback()
         raise
@@ -82,14 +75,7 @@ async def get_borrow(id: int, db: AsyncSession) -> BorrowScheme:
         if not borrow:
             return None
 
-        return BorrowScheme(
-            id=borrow.id,
-            book_id=borrow.book_id,
-            reader_name=borrow.reader_name,
-            borrow_date=borrow.borrow_date,
-            return_date=borrow.return_date,
-            is_return=borrow.is_return,
-        )
+        return borrow
     except Exception:
         raise
 
@@ -118,10 +104,8 @@ async def finished_borrow(
         await db.refresh(borrow)
         await db.refresh(book)
 
-        return BorrowUpdateScheme(
-            id=borrow.id,
-            return_date=borrow.return_date,
-        )
+        return borrow
+    
     except Exception:
         await db.rollback()
         raise

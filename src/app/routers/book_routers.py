@@ -23,7 +23,7 @@ async def api_create_book(
     available_copies: int,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    book = await create_book(
+    new_book = await create_book(
         title=title,
         description=description,
         author_id=author_id,
@@ -31,12 +31,18 @@ async def api_create_book(
         db=db,
     )
 
-    if not book:
+    if not new_book:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Автор с указанным айди не найден.",
         )
-    return book
+    return BookScheme(
+            id=new_book.id,
+            title=new_book.title,
+            description=new_book.description,
+            author_id=new_book.author_id,
+            available_copies=new_book.available_copies,
+        )
 
 
 @book_router.get(
@@ -52,8 +58,21 @@ async def api_get_all_books(db: Annotated[AsyncSession, Depends(get_db)]):
     if not books:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Книги не найдены."
+        
         )
-    return books
+    
+    books_response = [
+        BookScheme(
+            id=book.id,
+            title=book.title,
+            description=book.description,
+            author_id=book.author_id,
+            available_copies=book.available_copies,
+        )
+        for book in books
+    ]
+
+    return books_response
 
 
 @book_router.get(
@@ -71,7 +90,13 @@ async def api_get_book(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Книга по указанному айди не найдена.",
         )
-    return book
+    return BookScheme(
+            id=book.id,
+            title=book.title,
+            description=book.description,
+            author_id=book.author_id,
+            available_copies=book.available_copies,
+        )
 
 
 @book_router.put(
@@ -105,7 +130,13 @@ async def api_update_book(
             detail="Книга по указанному айди не найдена.",
         )
 
-    return current_book
+    return BookScheme(
+            id=current_book.id,
+            title=current_book.title,
+            description=current_book.description,
+            author_id=current_book.author_id,
+            available_copies=current_book.available_copies,
+        )
 
 
 @book_router.delete(

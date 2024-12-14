@@ -31,7 +31,13 @@ async def api_create_author(
     author = await create_author(
         name=name, surname=surname, date_of_birth=date_of_birth, db=db
     )
-    return author
+
+    return AuthorScheme(
+            id=author.id,
+            name=author.name,
+            surname=author.surname,
+            date_of_birth=author.date_of_birth,
+        )
 
 
 @author_router.get(
@@ -48,7 +54,18 @@ async def api_get_all_authors(db: Annotated[AsyncSession, Depends(get_db)]):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Авторы не найдены."
         )
-    return authors
+    
+    authors_response = [
+        AuthorScheme(
+            id=author.id,
+            name=author.name,
+            surname=author.surname,
+            date_of_birth=author.date_of_birth,
+        )
+        for author in authors
+    ]
+
+    return authors_response
 
 
 @author_router.get(
@@ -66,8 +83,13 @@ async def api_get_author(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Автор по указанному айди не найден.",
         )
-
-    return author
+    
+    return AuthorScheme(
+            id=author.id,
+            name=author.name,
+            surname=author.surname,
+            date_of_birth=author.date_of_birth,
+        )
 
 
 @author_router.put(
@@ -92,7 +114,13 @@ async def api_update_author(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Автор по указанному айди не найден.",
         )
-    return current_author
+    
+    return AuthorScheme(
+            id=current_author.id,
+            name=current_author.name,
+            surname=current_author.surname,
+            date_of_birth=current_author.date_of_birth,
+        )
 
 
 @author_router.delete(

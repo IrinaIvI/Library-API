@@ -50,7 +50,14 @@ async def api_create_borrow(
             detail="Дата возврата не может быть раньше даты взятия книги.",
         )
 
-    return borrow
+    return BorrowScheme(
+            id=borrow.id,
+            book_id=borrow.book_id,
+            reader_name=borrow.reader_name,
+            borrow_date=borrow.borrow_date,
+            return_date=borrow.return_date,
+            is_return=borrow.is_return,
+        )
 
 
 @borrow_router.get(
@@ -68,7 +75,19 @@ async def api_get_all_borrows(db: Annotated[AsyncSession, Depends(get_db)]):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Записи о выдаче книг не найдены.",
         )
-    return borrows
+    borrows_responses = [
+        BorrowScheme(
+            id=borrow.id,
+            book_id=borrow.book_id,
+            reader_name=borrow.reader_name,
+            borrow_date=borrow.borrow_date,
+            return_date=borrow.return_date,
+            is_return=borrow.is_return,
+        )
+        for borrow in borrows
+    ]
+
+    return borrows_responses
 
 
 @borrow_router.get(
@@ -87,7 +106,14 @@ async def api_get_borrow(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
             detail="Запись о выдаче по указанному айди не найдена.",
         )
 
-    return borrow
+    return BorrowScheme(
+            id=borrow.id,
+            book_id=borrow.book_id,
+            reader_name=borrow.reader_name,
+            borrow_date=borrow.borrow_date,
+            return_date=borrow.return_date,
+            is_return=borrow.is_return,
+        )
 
 
 @borrow_router.patch(
@@ -119,4 +145,7 @@ async def api_finished_borrow(
             detail="Дата возврата не может быть раньше даты взятия книги.",
         )
 
-    return borrow
+    return BorrowUpdateScheme(
+            id=borrow.id,
+            return_date=borrow.return_date,
+        )
