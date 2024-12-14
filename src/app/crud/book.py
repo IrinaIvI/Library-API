@@ -33,7 +33,6 @@ async def create_book(title: str, description: str, author_id: int, available_co
             author_id=new_book.author_id,
             available_copies=new_book.available_copies,
         )
-        # return new_book
     except Exception:
         await db.rollback()
         raise
@@ -87,7 +86,6 @@ async def update_book(id: int, title: str, description: str, author_id: int, ava
             author_id=current_book.author_id,
             available_copies=current_book.available_copies
         )
-        # return current_book
     
     except Exception:
         await db.rollback()

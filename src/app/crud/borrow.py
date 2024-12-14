@@ -26,8 +26,6 @@ async def create_borrow(book_id: int, reader_name: str, borrow_date: date, db: A
         
         book.available_copies -= 1
 
-        
-
         result = await db.execute(select(func.count()).select_from(Borrow))
         count = result.scalar()
 

@@ -27,7 +27,6 @@ async def create_author(name: str, surname: str, date_of_birth: date, db: AsyncS
             surname=new_author.surname,
             date_of_birth=new_author.date_of_birth,
         )
-        # return new_author
     except Exception:
         await db.rollback()
         raise
@@ -57,7 +56,6 @@ async def get_author(id: int, db: AsyncSession) -> AuthorScheme:
             date_of_birth=author.date_of_birth,
         )
         
-        # return author
     except Exception:
         raise
     
@@ -81,7 +79,6 @@ async def update_author(id: int, name: str, surname: str, date_of_birth: date, d
             surname=current_author.surname,
             date_of_birth=current_author.date_of_birth,
         )
-        # return current_author
     
     except Exception:
         await db.rollback()
